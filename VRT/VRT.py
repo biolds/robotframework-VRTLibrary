@@ -1,5 +1,7 @@
 import base64
+import os
 from visual_regression_tracker import VisualRegressionTracker, TestRun
+from visual_regression_tracker.exceptions import TestRunError
 from robot.api import logger
 
 
@@ -78,13 +80,17 @@ class VRT(object):
 
         """
 
-        with open(image_file, "rb") as img:
-            self.instance.track(
-                TestRun(
-                    name=name,
-                    imageBase64=base64.b64encode(img.read()).decode(encoding="UTF-8"),
-                    diffTollerancePercent=int(diff_tolerance),
-                    browser=browser,
-                    viewport=viewport,
+        try:
+            with open(image_file, "rb") as img:
+                self.instance.track(
+                    TestRun(
+                        name=name,
+                        imageBase64=base64.b64encode(img.read()).decode(encoding="UTF-8"),
+                        diffTollerancePercent=int(diff_tolerance),
+                        browser=browser,
+                        viewport=viewport,
+                    )
                 )
-            )
+        except TestRunError:
+            if not os.environ.get('VRT_IGNORE_ERRORS'):
+                raise
